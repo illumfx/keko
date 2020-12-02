@@ -1,0 +1,7 @@
+{
+    "token": "",
+    "prefix": "",
+    "extensions_path": "",
+    "owner_ids": ["List of ID's"],
+    "assignable_roles": ["List of ID's"]
+}
