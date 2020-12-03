@@ -10,10 +10,10 @@ class Admin(commands.Cog):
         self.session = aiohttp.ClientSession()
 
     async def cog_check(self, ctx: commands.Context):
-        if not ctx.author.id in self.bot.config_file.owner_ids:
-            return await ctx.send("Nö.")
+        if ctx.author.permissions_in(ctx.channel).administrator or ctx.author.id == self.bot.env.OWNER_ID:
+            return True
 
-        return True
+        return await ctx.send("Nö.")
 
     @commands.group()
     async def manage(self, ctx: commands.Context):

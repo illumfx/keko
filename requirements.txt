@@ -1,0 +1,6 @@
+discord.py
+python-dotenv
+python-dateutil
+timeago
+tortoise-orm[asyncpg]
+git+https://github.com/TwitchIO/TwitchIO.git
