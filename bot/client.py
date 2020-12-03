@@ -10,6 +10,7 @@ import json
 import traceback
 import dotenv
 import logging
+import platform
 
 
 class CustomBot(commands.Bot):
@@ -34,7 +35,8 @@ class CustomBot(commands.Bot):
         Args:
             bot (bool, optional): Should be True, because Userbots are not allowed.
         """
-        #await init_db(self.env)
+        if platform.system() == "Linux":
+            await init_db(self.env)
         await super().login(token=self.env.TOKEN, bot=bot)
         self.load_extensions()
 
@@ -49,3 +51,5 @@ class CustomBot(commands.Bot):
                         f"{extensions_path.replace('/', '.')}.{file.rstrip('.py')}")
                 except Exception as ex:
                     traceback.print_exc()
+        
+        self.load_extension("libneko.extras.superuser")
