@@ -5,7 +5,7 @@ import re
 
 
 class Events(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()

@@ -10,7 +10,7 @@ import dateutil.parser
 
 
 class General(commands.Cog):
-    def __init__(self, bot) -> None:
+    def __init__(self, bot):
         self.bot = bot
         self.roles = [783729519160459264] # Setting in database in the future
         self.date_time_str = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"

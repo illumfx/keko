@@ -2,6 +2,7 @@ discord.py
 python-dotenv
 python-dateutil
 timeago
+parsedatetime
 tortoise-orm[asyncpg]
 git+https://github.com/TwitchIO/TwitchIO.git
 git+https://gitlab.com/Tmpod/libneko

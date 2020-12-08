@@ -5,7 +5,7 @@ import aiohttp
 
 
 class Admin(commands.Cog):
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
 

@@ -27,16 +27,15 @@ class CustomBot(commands.Bot):
         self.logger = logging.getLogger(__name__)
 
         self.twitch = TwitchClient(self.env)
-        super().__init__(command_prefix=os.environ.get("PREFIX") or "?")
+        super().__init__(command_prefix=os.environ.get("PREFIX") or "?", intents=discord.Intents.all())
 
-    async def login(self, bot=True):
+    async def login(self, bot=True) -> None:
         """Overwrites the default login method to login with a token taken from the config.
 
         Args:
             bot (bool, optional): Should be True, because Userbots are not allowed.
         """
-        if platform.system() == "Linux":
-            await init_db(self.env)
+        await init_db(self.env)
         await super().login(token=self.env.TOKEN, bot=bot)
         self.load_extensions()
 
