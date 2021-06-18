@@ -1,13 +1,14 @@
-# Keko
+# (No bot name yet)
 
-Ein kleiner Discord Bot für einen Kollegen.
+A small discord bot with features that I would find usefull.
 
 ## Todo
 
 * [X] Name, Avatar, etc ... mit Command ändern
 * [X] Self assignable roles
-* [X] Datenbank einbinden (Postgresql)
-* [ ] Moderationssystem (Kick, Ban, Warn, Mute)
+* [X] Database connection (Postgresql)
+* [ ] Twitch.io Coverage for Client Features
+* [ ] Moderationsystem (Kick, Ban, Warn, Mute)
   * [ ] Dashboard?
 * [ ] Ticketsystem
 * [ ] Twitch / Instagram Notifications

@@ -8,7 +8,8 @@ async def init_db(env) -> None:
     for _ in range(5):
         try:
             await Tortoise.init(
-                db_url=f"postgres://keko:{env.POSTGRES_PASSWORD}@database/keko" if platform.system() == "Linux" else f"postgres://keko:{env.POSTGRES_PASSWORD}@localhost/keko",
+                #db_url=f"postgres://{env.POSTGRES_USER}:{env.POSTGRES_PASSWORD}@{env.POSTGRES_HOST}/{env.POSTGRES_DB}",
+                db_url=env.DB_URL,
                 modules={"models": ["bot.models"]}
             )  
         except:

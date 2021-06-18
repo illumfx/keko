@@ -13,7 +13,7 @@ class Admin(commands.Cog):
         if ctx.author.permissions_in(ctx.channel).administrator or ctx.author.id == self.bot.env.OWNER_ID:
             return True
 
-        return await ctx.send("Nö.")
+        return await ctx.send("No.")
 
     @commands.group()
     async def manage(self, ctx: commands.Context):
@@ -26,7 +26,7 @@ class Admin(commands.Cog):
         """Change bot name
         """
         await self.bot.user.edit(username=name)
-        await ctx.send(f"Name geändert zu: `{name}`.")
+        await ctx.send(f"Changed name to: `{name}`.")
 
     @manage.command()
     async def avatar(self, ctx: commands.Context):
@@ -36,11 +36,11 @@ class Admin(commands.Cog):
             async with self.session.get(ctx.message.attachments[0].url) as resp:
                 if resp.content_type.startswith("image"):
                     await self.bot.user.edit(avatar=await resp.read())
-                    await ctx.send("Profilbild geändert.")
+                    await ctx.send("Avatar has been changed.")
                 else:
-                    await ctx.send("Anhang ist kein Bild.")
+                    await ctx.send("Attachment is not an image.")
         else:
-            await ctx.send("Du musst einen Anhang anhängen.")
+            await ctx.send("You need to provide an attachment.")
 
 
 def setup(bot):

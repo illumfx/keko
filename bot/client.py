@@ -3,7 +3,6 @@ from discord.ext import commands
 
 from bot.extra import DotDict
 from bot.db import init_db
-from bot.twitch import TwitchClient
 
 import os
 import json
@@ -26,8 +25,7 @@ class CustomBot(commands.Bot):
 
         self.logger = logging.getLogger(__name__)
 
-        self.twitch = TwitchClient(self.env)
-        super().__init__(command_prefix=os.environ.get("PREFIX") or "?", intents=discord.Intents.all())
+        super().__init__(command_prefix=os.environ.get("PREFIX") or "!", intents=discord.Intents.all())
 
     async def login(self, bot=True) -> None:
         """Overwrites the default login method to login with a token taken from the config.
