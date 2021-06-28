@@ -1,46 +1,46 @@
-import discord
-from discord.ext import commands
-
 import aiohttp
+import discord
+from bot import errors, misc
+from discord.ext import commands
 
 
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.session = aiohttp.ClientSession()
 
     async def cog_check(self, ctx: commands.Context):
-        if ctx.author.permissions_in(ctx.channel).administrator or ctx.author.id == self.bot.env.OWNER_ID:
+        if ctx.author.id == self.bot.env.OWNER_ID:
             return True
 
-        return await ctx.send("No.")
+        raise commands.NotOwner
 
-    @commands.group()
-    async def manage(self, ctx: commands.Context):
-        """Change bot settings, appearence, etc ...
-        """
-        pass
+    @commands.group(invoke_without_command=True)
+    async def errors(self, ctx: commands.Context):
+        """Internal error handling stuff"""
+        raise errors.CommandGroupInvoked
 
-    @manage.command()
-    async def name(self, ctx: commands.Context, *, name: str):
-        """Change bot name
-        """
-        await self.bot.user.edit(username=name)
-        await ctx.send(f"Changed name to: `{name}`.")
-
-    @manage.command()
-    async def avatar(self, ctx: commands.Context):
-        """Change avatar, need to provide an attachment
-        """
-        if ctx.message.attachments:
-            async with self.session.get(ctx.message.attachments[0].url) as resp:
-                if resp.content_type.startswith("image"):
-                    await self.bot.user.edit(avatar=await resp.read())
-                    await ctx.send("Avatar has been changed.")
-                else:
-                    await ctx.send("Attachment is not an image.")
+    @errors.command(name="show")
+    async def errors_show(self, ctx: commands.Context, ref_id: str):
+        if error := self.bot.errors.get_error(ref_id):
+            embed = discord.Embed(
+                color=discord.Color.blurple(),
+                description=error.format(),
+                timestamp=error.date,
+            )
+            embed.set_footer(text="Error occured")
+            await ctx.reply(embed=embed)
         else:
-            await ctx.send("You need to provide an attachment.")
+            await self.bot.send_error(
+                ctx=ctx, message=f"Error with referral id `{ref_id}` couldn't be found."
+            )
+
+    @errors.command(name="remove")
+    async def errors_remove(self, ctx: commands.Context):
+        await ctx.send("")
+
+    @commands.command()
+    async def test(self, ctx):
+        await ctx.send(int("he4h"))
 
 
 def setup(bot):

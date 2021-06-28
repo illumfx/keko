@@ -1,4 +1,4 @@
-# (No bot name yet)
+# Suspicious Duck
 
 A small discord bot with features that I would find usefull.
 
