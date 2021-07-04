@@ -52,8 +52,7 @@ class RoboDuck(commands.AutoShardedBot):
             command_prefix=get_prefix,
             intents=discord.Intents.all(),
             activity=discord.Game("🦆"),
-            description="Quack!",
-            owner_id=os.getenv("OWNER_ID")
+            description="Quack!"
         )
 
     async def initialize_db(self):

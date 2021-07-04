@@ -11,7 +11,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     async def cog_check(self, ctx: commands.Context):
-        if ctx.author.id == int(os.getenv("OWNER_ID")):
+        if ctx.author.id == self.bot.owner_id:
             return True
 
         raise commands.NotOwner
