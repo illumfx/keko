@@ -1,14 +1,15 @@
-import discord
 import datetime
 import logging
 import os
 import secrets
-import aiohttp
-import aiofiles
 import traceback
-
-from discord.ext import commands
 from dataclasses import dataclass
+
+import aiofiles
+import aiohttp
+import discord
+from discord.ext import commands
+
 
 class DotDict(dict):
     """Access dictionary with dot notation."""
@@ -16,10 +17,12 @@ class DotDict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
-            
+
+
 class Cache:
     """Overall caching."""
-    def __init__(self):    
+
+    def __init__(self):
         self.cache = {}
 
     def add(self, attribute, value):
@@ -37,7 +40,8 @@ class Cache:
 
     def __str__(self):
         return str(self.cache)
-    
+
+
 class SQLSchema:
     def __init__(self):
         self.cache = {}
@@ -46,22 +50,24 @@ class SQLSchema:
         if file_path not in self.cache:
             async with aiofiles.open(file_path, "r") as file:
                 self.cache[file_path] = await file.read()
- 
+
         return self.cache[file_path]
 
-    
-def create_logger(name: str, level = logging.INFO):
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    
+
+def create_logger(name: str, level=logging.INFO):
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
     logger = logging.getLogger(name)
     logger.setLevel(level=level)
-    
+
     sh = logging.StreamHandler()
     sh.setLevel(level=level)
     sh.setFormatter(formatter)
-    
+
     logger.addHandler(sh)
-    
+
     return logger
 
 

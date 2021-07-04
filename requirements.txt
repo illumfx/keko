@@ -5,3 +5,4 @@ aiofiles
 tortoise-orm[asyncpg]
 twitchio
 jishaku
+psutil

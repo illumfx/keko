@@ -1,53 +1,59 @@
 import asyncio
+import json
 import logging
 import os
 import traceback
 import typing
+
+import aiofiles
 import aiohttp
 import discord
 import dotenv
 import pendulum
-import aiofiles
-import json
-
 from discord.ext import commands
 from tortoise import Tortoise
-from src import misc, context, models
+
+from src import context, misc, models
 
 DATABASE_CONNECTION_TRIES = 5
 
-async def get_prefix(bot, message):
+
+async def get_prefix(bot: "RoboDuck", message: discord.Message):
     await bot.wait_until_ready()
-    
-    if not message.guild: return commands.when_mentioned_or(os.getenv("PREFIX")(bot, message))
-    
+
+    if not message.guild:
+        return commands.when_mentioned_or(bot.default_prefix)(bot, message)
+
     prefixes = await models.Prefixes.get_or_none(guild_id=message.guild.id)
     if prefixes:
         return commands.when_mentioned_or(prefixes.prefix)(bot, message)
     else:
-        return commands.when_mentioned_or(os.getenv("PREFIX"))(bot, message)
+        return commands.when_mentioned_or(bot.default_prefix)(bot, message)
 
-class RoboDuck(commands.Bot):
+
+class RoboDuck(commands.AutoShardedBot):
     """
-    A custom `commands.Bot` class to suit our needs.
+    A custom `commands.AutoShardedBot` class to suit our needs.
     """
 
     def __init__(self):
         dotenv.load_dotenv()
-        
+
         self.uptime = pendulum.now()
-        
-        self._logger = misc.create_logger("roboduck")   
+
+        self._logger = misc.create_logger("roboduck")
         self._emojis = misc.Cache()
         
-        self._session = None    
-        
         self._prefix = os.getenv("PREFIX")
+
+        self._session = None
 
         super().__init__(
             command_prefix=get_prefix,
             intents=discord.Intents.all(),
-            activity=discord.Game("🦆")
+            activity=discord.Game("🦆"),
+            description="Quack!",
+            owner_id=os.getenv("OWNER_ID")
         )
 
     async def initialize_db(self):
@@ -55,8 +61,7 @@ class RoboDuck(commands.Bot):
         for i in range(DATABASE_CONNECTION_TRIES):
             try:
                 await Tortoise.init(
-                    db_url=os.getenv("DB_URL"),
-                    modules={"models": ["src.models"]}
+                    db_url=os.getenv("DB_URL"), modules={"models": ["src.models"]}
                 )
                 self.logger.info("Connection to database successfull.")
                 await Tortoise.generate_schemas()
@@ -64,9 +69,10 @@ class RoboDuck(commands.Bot):
                 return
             except Exception as ex:
                 self.logger.error(
-                    f"Connection to database failed. Retrying ... [{i}/{DATABASE_CONNECTION_TRIES}]", exc_info=traceback.format_tb(ex.__traceback__)
+                    f"Connection to database failed. Retrying ... [{i}/{DATABASE_CONNECTION_TRIES}]",
+                    exc_info=traceback.format_tb(ex.__traceback__),
                 )
-                await asyncio.sleep(2)
+                await asyncio.sleep(5)
         else:
             self.logger.error("Connection to database can't be established.")
 
@@ -77,14 +83,14 @@ class RoboDuck(commands.Bot):
             bot (bool, optional): Should be True, because Userbots are not allowed.
         """
         self.pool = await self.initialize_db()
-        
+
         await self.load_emojis()
         self.load_extensions()
-        
+
         async with aiohttp.ClientSession() as session:
             self._session = session
             await super().start(token=os.getenv("TOKEN"))
-            
+
     async def close(self):
         """Close the connection to postgres aswell as discord."""
         await Tortoise.close_connections()
@@ -100,10 +106,12 @@ class RoboDuck(commands.Bot):
                         f"{extensions_path.replace('/', '.')}.{file.rstrip('.py')}"
                     )
                 except Exception as ex:
-                    self.logger.error("", exc_info=traceback.format_tb(ex.__traceback__))
+                    self.logger.error(
+                        "", exc_info=traceback.format_tb(ex.__traceback__)
+                    )
 
         self.load_extension("jishaku")
-        
+
     async def load_emojis(self):
         """Loads emojis from a `emojis.json` file. Needed for later use."""
         async with aiofiles.open("emojis.json", "r") as file:
@@ -113,16 +121,25 @@ class RoboDuck(commands.Bot):
 
     async def get_context(self, message, *, cls=None):
         """Custom context."""
-        return await super().get_context(message, cls=cls or context.Context)
+        return await super().get_context(message, cls=cls or context.Context)    
     
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.author.bot:
+            return
+        
+        if before.content == after.content.strip(" "):
+            return
+
+        await self.process_commands(after)
+
     @property
     def session(self) -> typing.Union[aiohttp.ClientSession, None]:
         return self._session
-    
+
     @property
     def logger(self) -> logging.Logger:
         return self._logger
-    
+
     @property
     def default_prefix(self) -> str:
         return self._prefix

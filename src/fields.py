@@ -1,10 +1,11 @@
-from typing import List, Union, Type, Optional, Any
 import json
+from typing import Any, List, Optional, Type, Union
 
 from tortoise.fields.base import Field
 from tortoise.models import Model
 
 # https://stackoverflow.com/questions/64161083/how-to-use-postgresql-array-field-in-tortoise-orm
+
 
 class BigIntArrayField(Field, list):
     """
@@ -28,7 +29,8 @@ class BigIntArrayField(Field, list):
             array = json.loads(value.replace("'", '"'))
             return [int(x) for x in array]
         return value
-    
+
+
 class TextArrayField(Field, list):
     """
     Text field specifically for PostgreSQL.

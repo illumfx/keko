@@ -23,7 +23,7 @@ class Twitch(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def twitch(self, ctx: commands.Context):
         """Couple commands dedicated to twitch.tv"""
-        raise commands.CommandGroupInvoked
+        raise errors.CommandGroupInvoked
 
     @twitch.command()
     async def stream(self, ctx: commands.Context, channel: typing.Union[str, int]):
@@ -46,7 +46,7 @@ class Twitch(commands.Cog):
             )
             await ctx.reply(embed=embed)
         else:
-            await self.bot.send_error(ctx, message=f"`{channel}` isn't live.")
+            await ctx.pretty_send(f"`{channel}` isn't live.", emoji="cross", color=discord.Color.red())
 
     @twitch.command()
     async def top(self, ctx: commands.Context, limit: int = 10):
@@ -59,6 +59,8 @@ class Twitch(commands.Cog):
             embed = discord.Embed(color=discord.Color.purple(), description=out)
             embed.set_footer(text="Format: Name | ID", icon_url=self.twitch_icon)
             await ctx.reply(embed=embed)
+        else:
+            await ctx.pretty_send(f"`limit` can't be higher than 10 or lower than 1.", emoji="cross", color=discord.Color.red())
 
 
 def setup(discord_bot):
