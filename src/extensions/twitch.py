@@ -1,33 +1,35 @@
-from typing import Union
-
+import os
 import discord
 import pendulum
-from discord.ext import commands
-from twitchio import Client
+import typing
+import twitchio
 
-from ..errors import CommandGroupInvoked
-from ..misc import DotDict
+from discord.ext import commands
+
+from src import client, errors, misc
 
 
 class Twitch(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: client.RoboDuck):
         self.bot = bot
-        self.bot.twitch = Client(
-            client_id=bot.env.TWITCH_CLIENT_ID,
-            client_secret=bot.env.TWITCH_CLIENT_SECRET,
-        )
+        
+        if not hasattr(bot, "twitch"):
+            self.bot.twitch = twitchio.Client(
+                client_id=os.getenv("TWITCH_CLIENT_ID"),
+                client_secret=os.getenv("TWITCH_CLIENT_SECRET"),
+            )
         self.twitch_icon = "https://i.gyazo.com/522eaf91e415a35f9e9c1aee71fd1ec1.png"
 
     @commands.group(invoke_without_command=True)
     async def twitch(self, ctx: commands.Context):
         """Couple commands dedicated to twitch.tv"""
-        raise CommandGroupInvoked
+        raise commands.CommandGroupInvoked
 
     @twitch.command()
-    async def stream(self, ctx: commands.Context, channel: Union[str, int]):
+    async def stream(self, ctx: commands.Context, channel: typing.Union[str, int]):
         """Stream info for a channel"""
         if stream := await self.bot.twitch.get_stream(channel):
-            stream = DotDict(stream)
+            stream = misc.DotDict(stream)
             embed = discord.Embed(
                 color=discord.Color.purple(), description=stream.title
             )

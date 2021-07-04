@@ -1,12 +1,14 @@
-import asyncio
-import datetime
-import json
-from typing import Any
-
 import discord
-import pendulum
-from discord.ext import commands
+import datetime
+import logging
+import os
+import secrets
+import aiohttp
+import aiofiles
+import traceback
 
+from discord.ext import commands
+from dataclasses import dataclass
 
 class DotDict(dict):
     """Access dictionary with dot notation."""
@@ -14,6 +16,53 @@ class DotDict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+            
+class Cache:
+    """Overall caching."""
+    def __init__(self):    
+        self.cache = {}
+
+    def add(self, attribute, value):
+        if not self.is_valid(attribute):
+            self.cache[attribute] = value
+
+    def remove(self, attribute):
+        return self.cache.pop(attribute)
+
+    def get(self, attribute):
+        return self.cache.__getitem__(attribute)
+
+    def is_valid(self, attribute) -> bool:
+        return attribute in self.cache
+
+    def __str__(self):
+        return str(self.cache)
+    
+class SQLSchema:
+    def __init__(self):
+        self.cache = {}
+
+    async def read(self, file_path):
+        if file_path not in self.cache:
+            async with aiofiles.open(file_path, "r") as file:
+                self.cache[file_path] = await file.read()
+ 
+        return self.cache[file_path]
+
+    
+def create_logger(name: str, level = logging.INFO):
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(level=level)
+    
+    sh = logging.StreamHandler()
+    sh.setLevel(level=level)
+    sh.setFormatter(formatter)
+    
+    logger.addHandler(sh)
+    
+    return logger
 
 
 # TODO: Rewrite mute system

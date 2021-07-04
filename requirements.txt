@@ -1,6 +1,7 @@
-discord.py
+git+https://github.com/Rapptz/discord.py
 python-dotenv
-parsedatetime
+pendulum
+aiofiles
 tortoise-orm[asyncpg]
-git+https://github.com/TwitchIO/TwitchIO.git
-git+https://gitlab.com/Tmpod/libneko
+twitchio
+jishaku
