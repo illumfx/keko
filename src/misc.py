@@ -1,15 +1,7 @@
-import datetime
 import logging
-import os
-import secrets
-import traceback
+import typing
+
 from dataclasses import dataclass
-
-import aiofiles
-import aiohttp
-import discord
-from discord.ext import commands
-
 
 class DotDict(dict):
     """Access dictionary with dot notation."""
@@ -17,6 +9,19 @@ class DotDict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+    
+@dataclass
+class Color:
+    """Guild specific colors."""
+    neutral: int
+    error: int
+    success: int
+    
+    def get(self, key):
+        try:
+            return self.__getattribute__(key)
+        except AttributeError:
+            return None
 
 
 class Cache:
@@ -40,18 +45,6 @@ class Cache:
 
     def __str__(self):
         return str(self.cache)
-
-
-class SQLSchema:
-    def __init__(self):
-        self.cache = {}
-
-    async def read(self, file_path):
-        if file_path not in self.cache:
-            async with aiofiles.open(file_path, "r") as file:
-                self.cache[file_path] = await file.read()
-
-        return self.cache[file_path]
 
 
 def create_logger(name: str, level=logging.INFO):

@@ -19,7 +19,7 @@ class General(commands.Cog):
         start_time = time.perf_counter()
         message = await ctx.send(
             embed=discord.Embed(
-                color=discord.Color.light_grey(),
+                color=discord.Color.lighter_grey(),
                 description=f"{self.bot._emojis.get('loading')} Pinging ...",
             )
         )
@@ -27,7 +27,7 @@ class General(commands.Cog):
         heartbeat = self.bot.latency * 1000
 
         async with ctx.typing():
-            embed = discord.Embed(color=discord.Color.blurple())
+            embed = discord.Embed(color=ctx.get_color())
             embed.add_field(name="💓 Heartbeat:", value=f"`{heartbeat:,.2f}ms`")
             embed.add_field(name="🗄 ACK:", value=f"`{ack:,.2f}ms`")
             await message.delete()
@@ -37,8 +37,8 @@ class General(commands.Cog):
     async def about(self, ctx: commands.Context):
         """General information about the bot"""
         embed = discord.Embed(
-            color=discord.Color.blurple(),
-            title=f"{self.bot._emojis.get('bot')} About: {self.bot.user.name} | ID: {self.bot.user.id}",
+            color=ctx.get_color(),
+            title=f"{self.bot._emojis.bot} About: {self.bot.user.name} | ID: {self.bot.user.id}",
             description=self.bot.description,
         )
         embed.set_thumbnail(url=self.bot.user.avatar.url)

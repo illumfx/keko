@@ -26,6 +26,7 @@ class Twitch(commands.Cog):
         raise errors.CommandGroupInvoked
 
     @twitch.command()
+    @commands.cooldown(1, 5, type=commands.BucketType.user)
     async def stream(self, ctx: commands.Context, channel: typing.Union[str, int]):
         """Stream info for a channel"""
         if stream := await self.bot.twitch.get_stream(channel):
@@ -49,9 +50,11 @@ class Twitch(commands.Cog):
             await ctx.pretty_send(f"`{channel}` isn't live.", emoji="cross", color=discord.Color.red())
 
     @twitch.command()
+    @commands.cooldown(1, 5, type=commands.BucketType.user)
     async def top(self, ctx: commands.Context, limit: int = 10):
         """Top channels sorted by viewers"""
         if not limit < 10 or limit >= 1:
+            await ctx.typing()
             top = await self.bot.twitch.get_top_games(limit)
             out = str()
             for game in top:

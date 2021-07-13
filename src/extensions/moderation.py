@@ -2,8 +2,9 @@ import asyncio
 import datetime
 
 import discord
+from discord import message
 from discord.ext import commands
-from src import client, errors, models
+from src import client, errors, models, checks
 
 
 class Moderation(commands.Cog):
@@ -36,44 +37,38 @@ class Moderation(commands.Cog):
     @commands.guild_only()
     async def prefix(self, ctx: commands.Context):
         """Check current prefix."""
-        prefixes = await models.Prefixes.get_or_none(guild_id=ctx.guild.id)
-        if prefixes:
-            await ctx.pretty_send(
-                f"Current prefix is: `{prefixes.prefix}`",
-                emoji="info",
-            )
+        prefix = self.bot.guild_prefixes.get(ctx.guild.id, None)
+        embed = discord.Embed(color=ctx.get_color(),
+                              description=self.bot._emojis.info)
+        if prefix:
+            embed.description += f" Current prefix is: `{prefix}`"
         else:
-            await ctx.pretty_send(
-                f"Current prefix is the default prefix (`{self.bot.default_prefix}`)",
-                emoji="info",
-            )
+            embed.description += f" Current prefix is the default prefix (`{self.bot.default_prefix}`)"
+        await ctx.response(embed=embed)
 
     @prefix.command(name="reset")
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
+    @checks.is_owner_or_has_permissions(manage_guild=True)
     async def prefix_reset(self, ctx: commands.Context):
         """Reset a prefix."""
-        prefixes = await models.Prefixes.get_or_none(guild_id=ctx.guild.id)
-        if prefixes:
+        if self.bot.guild_prefixes.get(ctx.guild.id, None):
             if await ctx.confirm(
                 message=f"Do you want to reset the prefix?"
             ):
-                await prefixes.delete()
-                await ctx.pretty_send(
-                    f"Prefix is now the default prefix (`{self.bot.default_prefix}`).",
-                    emoji="check",
-                    color=discord.Color.green(),
-                )
+                await (await models.Prefixes.get(guild_id=ctx.guild.id)).delete()
+                self.bot.guild_prefixes.pop(ctx.guild.id)
+
+                embed = discord.Embed(color=ctx.get_color(
+                    "success"), description=f"{self.bot._emojis.check} Prefix is now the default prefix (`{self.bot.default_prefix}`).")
+
+                await ctx.response(embed=embed)
         else:
-            await ctx.pretty_send(
-                f"No custom prefix has been set, so it can't be reset.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} No custom prefix has been set, so it can't be reset.")
+            await ctx.response(embed=embed)
 
     @prefix.command(name="set")
     @commands.guild_only()
-    @commands.has_permissions(manage_guild=True)
+    @checks.is_owner_or_has_permissions(manage_guild=True)
     async def prefix_set(self, ctx: commands.Context, prefix: str):
         """Set a prefix, all other prefixes will be removed."""
         if prefix == self.bot.default_prefix:
@@ -91,14 +86,11 @@ class Moderation(commands.Cog):
             if prefixes:
                 prefixes.prefix = prefix
                 await prefixes.save()
-            else:
-                await models.Prefixes.create(guild_id=ctx.guild.id, prefix=prefix)
 
-            await ctx.pretty_send(
-                f"`{prefix}` has been set as prefix.",
-                emoji="check",
-                color=discord.Color.green(),
-            )
+            await models.Prefixes.create(guild_id=ctx.guild.id, prefix=prefix)
+
+            embed = discord.Embed(color=ctx.get_color("success"), description=f"{self.bot._emojis.check} `{prefix}` has been set as prefix.")
+            await ctx.response(embed=embed)
 
     # @commands.command()
     # async def mute(self, ctx: commands.Context, target: discord.Member, *, until):

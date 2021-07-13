@@ -6,29 +6,16 @@ import pendulum
 from discord import message
 from discord.ext import commands
 
-from src import views
+from src import views, models
 
 
-class Context(commands.Context):
-    async def pretty_send(
-        self,
-        description: str,
-        emoji: typing.Union[str, discord.Emoji, discord.PartialEmoji] = None,
-        content: str = None,
-        color: discord.Color = discord.Color.blurple(),
-    ):
-        """Sends a fancy standardized embed."""
-        if isinstance(emoji, str):
-            emoji = self.bot._emojis.get(emoji)
-
-        embed = discord.Embed(
-            color=color,
-            description=f"{emoji} {description}" if emoji else description,
-            timestamp=pendulum.now(),
-        )
-        embed.set_footer(
-            text=f"Requested by {self.author}", icon_url=self.author.avatar.url
-        )
+class Context(commands.Context):  
+    async def response(self, content: str = None, embed: discord.Embed = None):  
+        if embed:    
+            embed.set_footer(
+                text=f"Requested by {self.author}", icon_url=self.author.avatar.url
+            )
+            
         return await self.reply(content=content, embed=embed)
 
     async def confirm(
@@ -57,7 +44,10 @@ class Context(commands.Context):
         view.options = [so for so in parse_options(options)]
 
         message = await self.send("Select?", view=view)
-
-    @property
-    def guild_manager(self):
-        return self.bot.guild_manager.get_guild(self.guild.id)
+        
+    def get_color(self, type: str = None):
+        type = type or "neutral"
+        if color := self.bot.guild_colors.get(self.guild.id, None):
+            return discord.Color(int(color.get(type) or self.bot.colors.get(type) or self.bot.colors.neutral))
+        else:
+            return discord.Color(int(self.bot.colors.get(type)))

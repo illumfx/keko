@@ -40,9 +40,14 @@ class SelectSelfAssignableRoles(discord.ui.Select):
 class SelfAssignableRoles(commands.Cog):
     def __init__(self, bot: client.RoboDuck):
         self.bot = bot
+        
+    def cog_check(self, ctx: commands.Context):
+        if ctx.command.qualified_name != "sar":
+            return bool(ctx.author.guild_permissions.manage_guild)
+        return True
 
     @commands.group(invoke_without_command=True)
-    @commands.cooldown(1, 20, commands.BucketType.user)
+    @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.bot_has_permissions(manage_roles=True)
     async def sar(self, ctx: commands.Context):
         """Opens the self assignable roles view."""

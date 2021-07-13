@@ -24,20 +24,10 @@ class Events(commands.Cog):
             and self.bot.user.mentioned_in(message)
             and len(message.content.strip(self.bot.user.mention)) == 1
         ):
-            prefixes = await models.Prefixes.get_or_none(guild_id=message.guild.id)
+            prefix = self.bot.guild_prefixes.get(message.guild.id, self.bot.default_prefix)
             ctx = await self.bot.get_context(message)
-            if prefixes:
-                await ctx.pretty_send(
-                    f"My prefix for **{message.guild.name}** is: `{prefixes.prefix}`.",
-                    emoji="info",
-                    color=discord.Color.blurple(),
-                )
-            else:
-                await ctx.pretty_send(
-                    f"My prefix for **{message.guild.name}** is the default prefix (`{self.bot.default_prefix}`).",
-                    emoji="info",
-                    color=discord.Color.blurple(),
-                )
+            embed = discord.Embed(color=ctx.get_color(), description=f"{self.bot._emojis.info} My prefix for **{message.guild.name}** is: `{prefix}`.")
+            await ctx.reply(embed=embed)
 
 
     @commands.Cog.listener()
@@ -45,6 +35,11 @@ class Events(commands.Cog):
         self, ctx: commands.Context, error: commands.CommandError
     ):
         """The event triggered when an error is raised while invoking a command."""
+        
+        async def __send_error(description: str):
+            embed = discord.Embed(color=ctx.get_color("error"), description=self.bot._emojis.cross + description)
+            await ctx.response(embed=embed)
+        
         if hasattr(ctx.command, "on_error"):
             return
 
@@ -65,83 +60,41 @@ class Events(commands.Cog):
             return
 
         if isinstance(error, commands.DisabledCommand):
-            await ctx.pretty_send(
-                description=f"{ctx.command} has been disabled.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"{ctx.command} has been disabled.")
 
         elif isinstance(error, (commands.BadArgument, commands.BadUnionArgument)):
-            await ctx.pretty_send(
-                description=f"A parse or conversion error occured with your arguments. Check your input and try again. If you need help, use `{ctx.prefix}help {ctx.command.qualified_name or ctx.command.name}`",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"A parse or conversion error occured with your arguments. Check your input and try again. If you need help, use `{ctx.prefix}help {ctx.command.qualified_name or ctx.command.name}`")
 
         elif isinstance(error, discord.Forbidden):
-            await ctx.pretty_send(
-                description="I'm unable to perform this action. This could happen due to missing permissions for the bot.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"I'm unable to perform this action. This could happen due to missing permissions for the bot.")
 
         elif isinstance(error, commands.NotOwner):
-            await ctx.pretty_send(
-                description="This command is only available to the bot developer.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"This command is only available to the bot developer.")
 
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.pretty_send(
-                description=f"`{error.param.name}` is a required argument that is missing. For more help use `{ctx.prefix}help {ctx.command.qualified_name or ctx.command.name}`",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"`{error.param.name}` is a required argument that is missing. For more help use `{ctx.prefix}help {ctx.command.qualified_name or ctx.command.name}`")
 
         elif isinstance(error, commands.MissingPermissions):
-            await ctx.pretty_send(
-                description=f"You're missing {', '.join(error.missing_permissions)} permission(s).",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"You're missing {', '.join(error.missing_permissions)} permission(s).")
 
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.pretty_send(
-                description=f"I'am missing {', '.join(error.missing_permissions)} permission(s).",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"I'am missing {', '.join(error.missing_permissions)} permission(s).")
 
         elif isinstance(error, commands.NoPrivateMessage):
-            await ctx.pretty_send(
-                description="This command is not usable in DM's.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"This command is not usable in DM's.")
 
         elif isinstance(error, commands.CommandOnCooldown):
-            await ctx.pretty_send(
-                description=f"You're on cooldown! Retry in `{error.retry_after:,.2f}` seconds.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"You're on cooldown! Retry in `{error.retry_after:,.2f}` seconds.")
 
         elif isinstance(error, errors.MessageException):
-            await ctx.pretty_send(
-                description=error, emoji="cross", color=discord.Color.red()
-            )
+            await __send_error(error)
 
         elif isinstance(error, errors.CommandGroupInvoked):
             await ctx.send_help(ctx.command)
 
         else:
             self.bot.logger.error("", exc_info=error)
-            await ctx.pretty_send(
-                description=f"Unknown error occured. The bot developer has been notifed and the error will be fixed as soon as possible.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            await __send_error(f"Unknown error occured. The bot developer has been notifed and the error will be fixed as soon as possible.")
 
             async with aiohttp.ClientSession() as session:
                 description = (

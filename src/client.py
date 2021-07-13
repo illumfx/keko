@@ -4,7 +4,6 @@ import logging
 import os
 import traceback
 import typing
-
 import aiofiles
 import aiohttp
 import discord
@@ -23,29 +22,37 @@ async def get_prefix(bot: "RoboDuck", message: discord.Message):
 
     if not message.guild:
         return commands.when_mentioned_or(bot.default_prefix)(bot, message)
+        
+    prefix = bot.guild_prefixes.get(message.guild.id)
+    if not prefix:
+        prefixes = await models.Prefixes.get_or_none(guild_id=message.guild.id)
+        if prefixes:
+            prefix = prefixes.prefix
+            bot.guild_prefixes[message.guild.id] = prefixes.prefix
+        else:
+            prefix = bot.default_prefix
 
-    prefixes = await models.Prefixes.get_or_none(guild_id=message.guild.id)
-    if prefixes:
-        return commands.when_mentioned_or(prefixes.prefix)(bot, message)
-    else:
-        return commands.when_mentioned_or(bot.default_prefix)(bot, message)
+    return commands.when_mentioned_or(prefix)(bot, message)
 
 
-class RoboDuck(commands.AutoShardedBot):
+class RoboDuck(commands.Bot):
     """
-    A custom `commands.AutoShardedBot` class to suit our needs.
+    A custom `commands.Bot` class to suit our needs.
     """
 
     def __init__(self):
         dotenv.load_dotenv()
 
         self.uptime = pendulum.now()
+        
+        self.guild_prefixes = {}
+        self.guild_colors = {}
 
         self._logger = misc.create_logger("roboduck")
-        self._emojis = misc.Cache()
-        
         self._prefix = os.getenv("PREFIX")
-
+        
+        self._emojis = None
+        self._colors = None
         self._session = None
 
         super().__init__(
@@ -55,16 +62,24 @@ class RoboDuck(commands.AutoShardedBot):
             description="Quack!"
         )
 
+    
     async def initialize_db(self):
         """Connect to a postgres database."""
         for i in range(DATABASE_CONNECTION_TRIES):
             try:
                 await Tortoise.init(
-                    db_url=os.getenv("DB_URL"), modules={"models": ["src.models"]}
+                    db_url=os.getenv("DB_URL"), modules={"models": ["src.models"]},
                 )
                 self.logger.info("Connection to database successfull.")
+                
                 await Tortoise.generate_schemas()
                 self.logger.info("Schemas generated.")
+                
+                colors = await models.Colors.all()
+                for color in colors:
+                    self.guild_colors[color.guild_id] = misc.Color(color.neutral, color.error, color.success)
+                self.logger.info("Guild colors loaded.")
+                
                 return
             except Exception as ex:
                 self.logger.error(
@@ -81,9 +96,9 @@ class RoboDuck(commands.AutoShardedBot):
         Args:
             bot (bool, optional): Should be True, because Userbots are not allowed.
         """
-        self.pool = await self.initialize_db()
-
+        await self.initialize_db()
         await self.load_emojis()
+        await self.load_colors()
         self.load_extensions()
 
         async with aiohttp.ClientSession() as session:
@@ -110,13 +125,18 @@ class RoboDuck(commands.AutoShardedBot):
                     )
 
         self.load_extension("jishaku")
+        
+    async def load_colors(self):
+        """Loads colors from a `colors.json` file."""
+        async with aiofiles.open("colors.json", "r") as file:
+            file = json.loads(await file.read())
+            self._colors = misc.Color(**file)
 
     async def load_emojis(self):
-        """Loads emojis from a `emojis.json` file. Needed for later use."""
+        """Loads emojis from a `emojis.json` file."""
         async with aiofiles.open("emojis.json", "r") as file:
             file = json.loads(await file.read())
-            for key in file:
-                self._emojis.add(key, file[key])
+            self._emojis = misc.DotDict(file)
 
     async def get_context(self, message, *, cls=None):
         """Custom context."""
@@ -132,12 +152,16 @@ class RoboDuck(commands.AutoShardedBot):
         await self.process_commands(after)
 
     @property
-    def session(self) -> typing.Union[aiohttp.ClientSession, None]:
+    def session(self) -> aiohttp.ClientSession:
         return self._session
 
     @property
     def logger(self) -> logging.Logger:
         return self._logger
+    
+    @property
+    def colors(self) -> misc.Color:
+        return self._colors
 
     @property
     def default_prefix(self) -> str:

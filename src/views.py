@@ -22,13 +22,32 @@ class ConfirmView(BaseView):
     async def confirm(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
-        # await interaction.response.send_message("Confirmed", ephemeral=True)
         self.value = True
         self.stop()
 
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.red)
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
-        # await interaction.response.send_message("Canceled", ephemeral=True)
+        self.value = False
+        self.stop()
+
+
+class DeleteView(discord.ui.View):
+    def __init__(self, message: discord.Message, author: discord.Member):
+        self.message = message
+        self.author = author
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user == self.author:
+            return True
+        else:
+            await interaction.response.send_message(
+                content="You're not allowed to interact.", ephemeral=True
+            )
+            return False
+
+    @discord.ui.button(label="Stop", style=discord.ButtonStyle.red)
+    async def _stop(self, button: discord.ui.Button, interaction: discord.Interaction):
+        # await interaction.response.send_message("Stopped", ephemeral=True)
         self.value = False
         self.stop()
 
