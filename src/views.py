@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 
 
 class BaseView(discord.ui.View):
@@ -32,8 +33,8 @@ class ConfirmView(BaseView):
 
 
 class DeleteView(discord.ui.View):
-    def __init__(self, message: discord.Message, author: discord.Member):
-        self.message = message
+    def __init__(self, author: discord.Member, timeout):
+        super().__init__(timeout=timeout)
         self.author = author
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -45,16 +46,8 @@ class DeleteView(discord.ui.View):
             )
             return False
 
-    @discord.ui.button(label="Stop", style=discord.ButtonStyle.red)
+    @discord.ui.button(emoji="<:trash:859443116531777547>", style=discord.ButtonStyle.grey)
     async def _stop(self, button: discord.ui.Button, interaction: discord.Interaction):
-        # await interaction.response.send_message("Stopped", ephemeral=True)
-        self.value = False
+        self.value = True
         self.stop()
 
-
-class StopView(BaseView):
-    @discord.ui.button(label="Stop", style=discord.ButtonStyle.red)
-    async def _stop(self, button: discord.ui.Button, interaction: discord.Interaction):
-        # await interaction.response.send_message("Stopped", ephemeral=True)
-        self.value = False
-        self.stop()

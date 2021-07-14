@@ -10,6 +10,7 @@ from src import client, errors, misc
 
 
 class Twitch(commands.Cog):
+    """Some twitch commands"""
     def __init__(self, bot: client.RoboDuck):
         self.bot = bot
         
@@ -54,17 +55,17 @@ class Twitch(commands.Cog):
     async def top(self, ctx: commands.Context, limit: int = 10):
         """Top channels sorted by viewers"""
         if not limit < 10 or limit >= 1:
-            await ctx.typing()
-            top = await self.bot.twitch.get_top_games(limit)
-            out = str()
-            for game in top:
-                out += f"[{game['name']}]({game['box_art_url'].format(width=285, height=380)}) | `{game['id']}`\n"
-            embed = discord.Embed(color=discord.Color.purple(), description=out)
-            embed.set_footer(text="Format: Name | ID", icon_url=self.twitch_icon)
+            async with ctx.typing():
+                top = await self.bot.twitch.get_top_games(limit)
+                out = str()
+                for game in top:
+                    out += f"[{game['name']}]({game['box_art_url'].format(width=285, height=380)}) | `{game['id']}`\n"
+                embed = discord.Embed(color=discord.Color.purple(), description=out)
+                embed.set_footer(text="Format: Name | ID", icon_url=self.twitch_icon)
             await ctx.reply(embed=embed)
         else:
             await ctx.pretty_send(f"`limit` can't be higher than 10 or lower than 1.", emoji="cross", color=discord.Color.red())
 
 
-def setup(discord_bot):
-    discord_bot.add_cog(Twitch(discord_bot))
+def setup(bot):
+    bot.add_cog(Twitch(bot))

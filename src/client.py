@@ -91,11 +91,7 @@ class RoboDuck(commands.Bot):
             self.logger.error("Connection to database can't be established.")
 
     async def start(self):
-        """Overwrites the default start method to login with a token taken from the config.
-
-        Args:
-            bot (bool, optional): Should be True, because Userbots are not allowed.
-        """
+        """Overwrites the default start method to login with a token taken from the config."""
         await self.initialize_db()
         await self.load_emojis()
         await self.load_colors()
@@ -117,7 +113,7 @@ class RoboDuck(commands.Bot):
             if file.endswith(".py") and not file.startswith("__init__"):
                 try:
                     self.load_extension(
-                        f"{extensions_path.replace('/', '.')}.{file.rstrip('.py')}"
+                        f"{extensions_path.replace('/', '.')}.{file.replace('.py', '')}"
                     )
                 except Exception as ex:
                     self.logger.error(
@@ -143,13 +139,10 @@ class RoboDuck(commands.Bot):
         return await super().get_context(message, cls=cls or context.Context)    
     
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
-        if before.author.bot:
-            return
-        
-        if before.content == after.content.strip(" "):
+        if before.content == after.content:
             return
 
-        await self.process_commands(after)
+        return await self.process_commands(after)
 
     @property
     def session(self) -> aiohttp.ClientSession:

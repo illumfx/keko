@@ -1,17 +1,16 @@
 import asyncio
 import typing
-
 import discord
 import pendulum
-from discord import message
-from discord.ext import commands
 
+from discord.ext import commands
 from src import views, models
 
 
 class Context(commands.Context):  
     async def response(self, content: str = None, embed: discord.Embed = None):  
-        if embed:    
+        if embed:   
+            embed.timestamp = discord.utils.utcnow()
             embed.set_footer(
                 text=f"Requested by {self.author}", icon_url=self.author.avatar.url
             )
@@ -32,6 +31,17 @@ class Context(commands.Context):
         else:
             await message.delete()
             return bool(view.value)
+        
+    async def waste(self, message: str = None, embed: discord.Embed = None, timeout=None):
+        """Wastable message"""
+        view = views.DeleteView(self.author, timeout)
+        message = await self.send(message, embed=embed, view=view)
+        await view.wait()
+        await message.delete()
+        try:
+            await self.message.delete()
+        except:
+            pass
 
     async def select(self, options: list = ["test", "he"], timeout=30):
         """Select options."""
@@ -45,9 +55,9 @@ class Context(commands.Context):
 
         message = await self.send("Select?", view=view)
         
-    def get_color(self, type: str = None):
-        type = type or "neutral"
-        if color := self.bot.guild_colors.get(self.guild.id, None):
-            return discord.Color(int(color.get(type) or self.bot.colors.get(type) or self.bot.colors.neutral))
+    def get_color(self, color: str = None):
+        color = color or "neutral"
+        if guild_color := self.bot.guild_colors.get(self.guild.id, None):
+            return discord.Color(int(guild_color.get(color) or self.bot.colors.get(color) or self.bot.colors.neutral))
         else:
-            return discord.Color(int(self.bot.colors.get(type)))
+            return discord.Color(int(self.bot.colors.get(color)))

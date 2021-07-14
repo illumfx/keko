@@ -7,6 +7,7 @@ from src import client, errors, misc
 
 
 class Admin(commands.Cog):
+    """Private commands for the developer."""
     def __init__(self, bot: client.RoboDuck):
         self.bot = bot
 

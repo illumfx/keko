@@ -11,6 +11,7 @@ twitch_clip_rx = r"(?:https:\/\/)?clips\.twitch\.tv\/"
 
 
 class Events(commands.Cog):
+    """Some events."""
     def __init__(self, bot: client.RoboDuck):
         self.bot = bot
 
