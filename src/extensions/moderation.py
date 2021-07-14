@@ -160,32 +160,23 @@ class Moderation(commands.Cog):
                 await message.delete()
                 view.stop()
         except:
-            await ctx.pretty_send(
-                "Self assignable roles haven't been set up yet.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} Self assignable roles haven't been set up yet.")
+            await ctx.response(embed=embed)
 
     @sar.command(name="add")
     @commands.has_guild_permissions(manage_roles=True)
     async def sar_add(self, ctx: commands.Context, role: discord.Role):
         """Add a role to self assignable roles."""
         if role > ctx.guild.me.top_role:
-            return ctx.pretty_send(
-                f"{role.mention} is higher in the hierarchy than me.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} {role.mention} is higher in the hierarchy than me.")
+            return await ctx.response(embed=embed)
 
         sar = await models.SelfAssignableRoles.get_or_none(guild_id=ctx.guild.id)
 
         if sar:
             if role.id in sar.roles:
-                await ctx.pretty_send(
-                    f"{role.mention} already in self assignable roles.",
-                    emoji="cross",
-                    color=discord.Color.red(),
-                )
+                embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} {role.mention} already in self assignable roles.")
+                return await ctx.response(embed=embed)
 
             sar.roles.append(role.id)
             await sar.save()
@@ -194,43 +185,31 @@ class Moderation(commands.Cog):
                 guild_id=ctx.guild.id, roles=[role.id]
             )
 
-        await ctx.pretty_send(
-            f"Added {role.mention} to self assignable roles.",
-            emoji="check",
-            color=discord.Color.green(),
-        )
+        embed = discord.Embed(color=ctx.get_color("success"), description=f"{self.bot._emojis.success} Added {role.mention} to self assignable roles.")
+        await ctx.response(embed=embed)
 
     @sar.command(name="remove")
     @commands.has_guild_permissions(manage_roles=True)
     async def sar_remove(self, ctx: commands.Context, role: discord.Role):
         """Remove a role from self assignable roles."""
         if role > ctx.guild.me.top_role:
-            return await ctx.pretty_send(
-                f"{role.mention} is higher in the hierarchy than me.",
-                emoji="cross",
-                color=discord.Color.red(),
-            )
+            embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} {role.mention} is higher in the hierarchy than me.")
+            return await ctx.response(embed=embed)
 
         sar = await models.SelfAssignableRoles.get_or_none(guild_id=ctx.guild.id)
 
         if sar:
             if role.id not in sar.roles:
-                await ctx.pretty_send(
-                    f"{role.mention} not in self assignable roles.",
-                    emoji="cross",
-                    color=discord.Color.red(),
-                )
+                embed = discord.Embed(color=ctx.get_color("error"), description=f"{self.bot._emojis.cross} {role.mention} not in self assignable roles.")
+                return await ctx.response(embed=embed)
 
             sar.roles.remove(role.id)
             await sar.save()
         else:
             await sar.delete()
 
-        await ctx.pretty_send(
-            f"Removed {role.mention} from self assignable roles.",
-            emoji="check",
-            color=discord.Color.green(),
-        )
+        embed = discord.Embed(color=ctx.get_color("success"), description=f"{self.bot._emojis.success} Removed {role.mention} from self assignable roles.")
+        await ctx.response(embed=embed)
 
 
     # @commands.command()
